@@ -17,8 +17,8 @@ Built quickly to help visualize big production setups and keep things organized.
 1. **Unzip** the downloaded release ZIP.  
 2. Run the program by starting **`EndfieldModeler.exe`**.  
 3. **Left-click and drag** to move around the workspace.  
-4. **Right-click** to open the list of production lines and search.  
-5. Click a production line from the list → the full line is created on the workspace.  
+4. Use the **controls in the top-right corner** of the app.  
+5. To create a new production line, press the **“Create new Production-Line”** button.  
 6. Nodes are **moveable** and display:  
    - Production item  
    - Production need  

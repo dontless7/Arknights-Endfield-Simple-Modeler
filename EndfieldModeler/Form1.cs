@@ -29,16 +29,53 @@ namespace EndfieldModeler
         private TextBox _searchBox = null!;
         private FlowLayoutPanel _searchList = null!;
 
+        private Button _btnCreateProduction;
+
+        private bool _isDraggingScroll = false;
+        private int _dragStartY;
+        private int _dragStartScrollVal;
+
         public Form1()
         {
             DoubleBuffered = true;
             Size = new Size(1400, 900);
             BackColor = Color.FromArgb(20, 20, 25);
-            Text = "Simple Endfield Modeler - Pre Alpha";
+            Text = "Arknights:Endfield Simple Modeler (AESM) v1.1.0-alpha";
             KeyPreview = true;
 
             InitializeRecipes();
             InitializeSearchMenu();
+
+            _btnCreateProduction = new Button
+            {
+                Text = "Create new Production-Line",
+                Size = new Size(250, 40),
+                BackColor = Color.FromArgb(45, 45, 55),
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat,
+                Font = new Font("Segoe UI", 10f, FontStyle.Bold),
+                Cursor = Cursors.Hand
+            };
+            _btnCreateProduction.FlatAppearance.BorderColor = Color.FromArgb(80, 80, 90);
+
+            _btnCreateProduction.Location = new Point((this.ClientSize.Width - _btnCreateProduction.Width) / 2, 20);
+
+            _btnCreateProduction.Click += (s, e) => {
+                _searchPanel.Visible = !_searchPanel.Visible;
+                if (_searchPanel.Visible)
+                {
+                    _searchPanel.Location = new Point(_btnCreateProduction.Location.X, _btnCreateProduction.Bottom + 5);
+                    _searchBox.Text = "";
+                    UpdateSearchList("");
+                    _searchBox.Focus();
+                }
+            };
+            Controls.Add(_btnCreateProduction);
+
+            this.Resize += (s, e) => {
+                _btnCreateProduction.Location = new Point((this.ClientSize.Width - _btnCreateProduction.Width) / 2, 20);
+                _searchPanel.Location = new Point(_btnCreateProduction.Location.X, _btnCreateProduction.Bottom + 5);
+            };
 
             MouseDown += OnMouseDown;
             MouseMove += OnMouseMove;
@@ -52,7 +89,7 @@ namespace EndfieldModeler
         {
             void AddRecipe(string name, string machine, float timeInSeconds, float outputAmount, params (string, float)[] ins) =>
                 _recipes.Add(new Recipe { ItemName = name, MachineName = machine, CraftingTimeSeconds = timeInSeconds, OutputAmount = outputAmount, Inputs = ins.Select(x => new Ingredient { Name = x.Item1, Amount = x.Item2 }).ToList() });
-            void AddRaw(string name) => _recipes.Add(new Recipe { ItemName = name, MachineName = "Welt", IsRawResource = true });
+            void AddRaw(string name) => _recipes.Add(new Recipe { ItemName = name, MachineName = "World resource", IsRawResource = true });
 
             AddRaw("Originium Ore");
             AddRaw("Amethyst Ore");
@@ -60,7 +97,7 @@ namespace EndfieldModeler
 
             AddRecipe("Amethyst Part", "Fitting Unit", 2, 1, ("Amethyst Fiber", 1));
             AddRecipe("Amethyst Fiber", "Refining Unit", 2, 1, ("Amethyst Ore", 1));
-            AddRecipe("Tal HC Battery", "Packaging Unit", 10, 1, ("Steel Part", 10), ("Dense Originium Powder", 15));
+            AddRecipe("HC Battery", "Packaging Unit", 10, 1, ("Steel Part", 10), ("Dense Originium Powder", 15));
             AddRecipe("Steel Part", "Fitting Unit", 2, 1, ("Steel", 1));
             AddRecipe("Steel", "Refining Unit", 2, 1, ("Dense Ferrium Powder", 1));
             AddRecipe("Dense Ferrium Powder", "Grinding Unit", 2, 1, ("Sandleaf Powder", 1), ("Ferrium Powder", 2));
@@ -96,17 +133,126 @@ namespace EndfieldModeler
             AddRecipe("Amethyst Component", "Gearing Unit", 10, 1, ("Amethyst Fiber", 5), ("Origocrust", 5));
             AddRecipe("Ferrium Component", "Gearing Unit", 10, 1, ("Ferrium", 10), ("Origocrust", 10));
             AddRecipe("Cryston Part", "Fitting Unit", 2, 1, ("Cryston Fiber", 1));
-            AddRecipe("Tal LC Battery", "Packaging Unit", 10, 1, ("Originium Powder", 10), ("Amethyst Part", 5));
-            AddRecipe("Tal SC Battery", "Packaging Unit", 10, 1, ("Originium Powder", 15), ("Ferrium Part", 10));
+            AddRecipe("LC Battery", "Packaging Unit", 10, 1, ("Originium Powder", 10), ("Amethyst Part", 5));
+            AddRecipe("SC Battery", "Packaging Unit", 10, 1, ("Originium Powder", 15), ("Ferrium Part", 10));
+            AddRecipe("Citrome", "Planting Unit", 2, 1, ("Citrome Seed", 1));
+            AddRecipe("Citrome Seed", "Seed-Picking Unit", 2, 2, ("Citrome", 1));
+            AddRecipe("Aketine", "Planting Unit", 2, 1, ("Aketine Seed", 1));
+            AddRecipe("Aketine Seed", "Seed-Picking Unit", 2, 2, ("Aketine", 1));
+            AddRecipe("Jincao", "Planting Unit", 2, 1, ("Jincao Seed", 1));
+            AddRecipe("Jincao Seed", "Seed-Picking Unit", 2, 2, ("Jincao", 1));
+            AddRecipe("Yazhen", "Planting Unit", 2, 1, ("Yazhen Seed", 1));
+            AddRecipe("Yazhen Seed", "Seed-Picking Unit", 2, 2, ("Yazhen", 1));
         }
 
         private void InitializeSearchMenu()
         {
-            _searchPanel = new Panel { Size = new Size(280, 450), BackColor = Color.FromArgb(35, 35, 40), Visible = false, BorderStyle = BorderStyle.FixedSingle };
-            _searchBox = new TextBox { Dock = DockStyle.Top, BackColor = Color.FromArgb(30, 30, 35), ForeColor = Color.White, Font = new Font("Segoe UI", 10), BorderStyle = BorderStyle.FixedSingle };
+            _searchPanel = new Panel
+            {
+                Size = new Size(450, 500),
+                BackColor = Color.FromArgb(25, 25, 30),
+                Visible = false,
+                Padding = new Padding(1)
+            };
+
+            _searchPanel.Paint += (s, e) => {
+                e.Graphics.DrawRectangle(new Pen(Color.FromArgb(60, 60, 70), 2), 0, 0, _searchPanel.Width - 1, _searchPanel.Height - 1);
+            };
+
+            _searchBox = new TextBox
+            {
+                Dock = DockStyle.Top,
+                BackColor = Color.FromArgb(20, 20, 25),
+                ForeColor = Color.White,
+                Font = new Font("Segoe UI", 12f),
+                BorderStyle = BorderStyle.FixedSingle
+            };
             _searchBox.TextChanged += (s, e) => UpdateSearchList(_searchBox.Text);
-            _searchList = new FlowLayoutPanel { Dock = DockStyle.Fill, AutoScroll = true, Padding = new Padding(5) };
-            _searchPanel.Controls.Add(_searchList);
+
+            Panel listContainer = new Panel
+            {
+                Location = new Point(0, _searchBox.Bottom),
+                Size = new Size(435, _searchPanel.Height - _searchBox.Height - 2),
+                BackColor = Color.Transparent,
+                Padding = new Padding(0),
+                Margin = new Padding(0),
+            };
+
+            _searchList = new FlowLayoutPanel
+            {
+                Location = new Point(0, 0),
+                Size = new Size(listContainer.Width + 20, listContainer.Height),
+                AutoScroll = true,
+                BackColor = Color.FromArgb(25, 25, 30),
+                FlowDirection = FlowDirection.TopDown,
+                WrapContents = false,
+                Padding = new Padding(10, 10, 0, 10)
+            };
+
+            Panel customScrollTrack = new Panel
+            {
+                Width = 10,
+                Height = listContainer.Height,
+                Location = new Point(_searchPanel.Width - 12, _searchBox.Bottom),
+                BackColor = Color.FromArgb(30, 30, 35),
+                Cursor = Cursors.Default
+            };
+
+            Panel scrollThumb = new Panel
+            {
+                Width = 6,
+                Height = 100,
+                BackColor = Color.FromArgb(80, 80, 90),
+                Location = new Point(2, 0),
+                Cursor = Cursors.Hand
+            };
+
+            Action syncThumb = () => {
+                if (_searchList.DisplayRectangle.Height <= _searchList.Height)
+                {
+                    scrollThumb.Visible = false;
+                    return;
+                }
+                scrollThumb.Visible = true;
+                float scrollRange = _searchList.DisplayRectangle.Height - _searchList.Height;
+                float thumbRange = customScrollTrack.Height - scrollThumb.Height;
+                float scrollPercent = (float)-_searchList.AutoScrollPosition.Y / scrollRange;
+                scrollThumb.Top = (int)(scrollPercent * thumbRange);
+            };
+
+            _searchList.Scroll += (s, e) => syncThumb();
+            _searchList.MouseWheel += (s, e) => syncThumb();
+
+            scrollThumb.MouseDown += (s, e) => {
+                if (e.Button == MouseButtons.Left)
+                {
+                    _isDraggingScroll = true;
+                    _dragStartY = e.Y;
+                    _dragStartScrollVal = -_searchList.AutoScrollPosition.Y;
+                }
+            };
+
+            scrollThumb.MouseMove += (s, e) => {
+                if (_isDraggingScroll)
+                {
+                    int deltaY = e.Y - _dragStartY;
+                    float thumbRange = customScrollTrack.Height - scrollThumb.Height;
+                    float scrollRange = _searchList.DisplayRectangle.Height - _searchList.Height;
+                    float scrollDelta = (deltaY / thumbRange) * scrollRange;
+                    _searchList.AutoScrollPosition = new Point(0, (int)(_dragStartScrollVal + scrollDelta));
+                    syncThumb();
+                }
+            };
+
+            scrollThumb.MouseUp += (s, e) => _isDraggingScroll = false;
+            scrollThumb.MouseEnter += (s, e) => scrollThumb.BackColor = Color.FromArgb(110, 110, 125);
+            scrollThumb.MouseLeave += (s, e) => scrollThumb.BackColor = Color.FromArgb(80, 80, 90);
+
+            listContainer.Controls.Add(_searchList);
+            customScrollTrack.Controls.Add(scrollThumb);
+
+            _searchPanel.Controls.Add(listContainer);
+            _searchPanel.Controls.Add(customScrollTrack);
             _searchPanel.Controls.Add(_searchBox);
             Controls.Add(_searchPanel);
         }
@@ -115,43 +261,105 @@ namespace EndfieldModeler
         {
             _searchList.SuspendLayout();
             _searchList.Controls.Clear();
+
             var matches = _recipes
+                .Where(r => !r.IsRawResource)
                 .Where(r => string.IsNullOrWhiteSpace(filter) || r.ItemName.ToLower().Contains(filter.ToLower()))
                 .OrderBy(r => r.ItemName);
 
             foreach (var r in matches)
             {
-                Panel itemPanel = new Panel { Width = 250, Height = 40, Margin = new Padding(0, 0, 0, 2), BackColor = Color.FromArgb(45, 45, 50) };
+                Panel itemPanel = new Panel
+                {
+                    Width = 410,
+                    Height = 75,
+                    Margin = new Padding(0, 0, 0, 6),
+                    BackColor = Color.FromArgb(40, 40, 45),
+                    Cursor = Cursors.Hand
+                };
 
-                PictureBox itemIcon = new PictureBox { Image = GetIcon(r.ItemName), Size = new Size(24, 24), Location = new Point(5, 8), SizeMode = PictureBoxSizeMode.Zoom };
-                PictureBox machIcon = new PictureBox { Image = GetIcon(r.MachineName), Size = new Size(16, 16), Location = new Point(32, 12), SizeMode = PictureBoxSizeMode.Zoom };
+                Action selectAction = () => {
+                    CreateFullTree(r);
+                    _searchPanel.Visible = false;
+                };
 
-                Button b = new Button
+                Action applyHover = () => itemPanel.BackColor = Color.FromArgb(60, 60, 70);
+                Action removeHover = () => itemPanel.BackColor = Color.FromArgb(40, 40, 45);
+
+                PictureBox itemIcon = new PictureBox
+                {
+                    Image = GetIcon(r.ItemName),
+                    Size = new Size(42, 42),
+                    Location = new Point(12, 16),
+                    SizeMode = PictureBoxSizeMode.Zoom
+                };
+
+                Label nameLabel = new Label
                 {
                     Text = r.ItemName,
-                    Size = new Size(120, 40),
-                    Location = new Point(55, 0),
-                    FlatStyle = FlatStyle.Flat,
                     ForeColor = Color.White,
-                    TextAlign = ContentAlignment.MiddleLeft
+                    Font = new Font("Segoe UI", 11f, FontStyle.Bold),
+                    Location = new Point(65, 12),
+                    AutoSize = true
                 };
-                b.FlatAppearance.BorderSize = 0;
-                b.Click += (s, e) => { CreateFullTree(r); _searchPanel.Visible = false; };
+
+                PictureBox machIcon = new PictureBox
+                {
+                    Image = GetIcon(r.MachineName),
+                    Size = new Size(22, 22),
+                    Location = new Point(68, 38),
+                    SizeMode = PictureBoxSizeMode.Zoom
+                };
+
+                Label machLabel = new Label
+                {
+                    Text = r.MachineName,
+                    ForeColor = Color.White,
+                    Font = new Font("Segoe UI", 9f),
+                    Location = new Point(94, 40),
+                    AutoSize = true
+                };
+
+                itemPanel.Click += (s, e) => selectAction();
+                itemIcon.Click += (s, e) => selectAction();
+                nameLabel.Click += (s, e) => selectAction();
+                machIcon.Click += (s, e) => selectAction();
+                machLabel.Click += (s, e) => selectAction();
+                itemPanel.MouseEnter += (s, e) => applyHover();
+                itemPanel.MouseLeave += (s, e) => {
+                    if (!itemPanel.ClientRectangle.Contains(itemPanel.PointToClient(Cursor.Position)))
+                        removeHover();
+                };
+                itemIcon.MouseEnter += (s, e) => applyHover();
+                nameLabel.MouseEnter += (s, e) => applyHover();
+                machIcon.MouseEnter += (s, e) => applyHover();
+                machLabel.MouseEnter += (s, e) => applyHover();
 
                 itemPanel.Controls.Add(itemIcon);
+                itemPanel.Controls.Add(nameLabel);
                 itemPanel.Controls.Add(machIcon);
-                itemPanel.Controls.Add(b);
+                itemPanel.Controls.Add(machLabel);
 
-                int startX = 180;
+                int startX = itemPanel.Width - 40;
                 foreach (var ing in r.Inputs)
                 {
-                    PictureBox ingIcon = new PictureBox { Image = GetIcon(ing.Name), Size = new Size(16, 16), Location = new Point(startX, 12), SizeMode = PictureBoxSizeMode.Zoom };
+                    PictureBox ingIcon = new PictureBox
+                    {
+                        Image = GetIcon(ing.Name),
+                        Size = new Size(28, 28),
+                        Location = new Point(startX, 23),
+                        SizeMode = PictureBoxSizeMode.Zoom
+                    };
+                    ingIcon.Click += (s, e) => selectAction();
+                    ingIcon.MouseEnter += (s, e) => applyHover();
                     itemPanel.Controls.Add(ingIcon);
-                    startX += 20;
+                    startX -= 32;
                 }
+
                 _searchList.Controls.Add(itemPanel);
             }
             _searchList.ResumeLayout();
+            _searchList.PerformLayout();
         }
 
         private Image? GetIcon(string name)
@@ -191,7 +399,16 @@ namespace EndfieldModeler
             _viewOffset = new PointF(0, 0);
             _zoom = 1.0f;
             float baseRate = (60f / (rootRecipe.CraftingTimeSeconds > 0 ? rootRecipe.CraftingTimeSeconds : 1)) * rootRecipe.OutputAmount;
-            var root = new ProductionNode { Recipe = rootRecipe, Location = new Point(Width / 2 + 200, Height / 2), TargetItemsPerMinute = baseRate };
+
+            int calcHeight = Math.Max(160, 100 + (rootRecipe.Inputs.Count * 30));
+            var root = new ProductionNode
+            {
+                Recipe = rootRecipe,
+                Location = new Point(Width / 2 + 200, Height / 2),
+                TargetItemsPerMinute = baseRate,
+                Size = new Size(300, calcHeight)
+            };
+
             _nodes.Add(root);
             GeneratePredecessors(root, new HashSet<string> { root.Recipe.ItemName });
             Invalidate();
@@ -215,11 +432,13 @@ namespace EndfieldModeler
 
                 targetLoc = GetFreeLocation(targetLoc);
 
+                int calcHeight = Math.Max(160, 100 + (rec.Inputs.Count * 30));
                 var node = new ProductionNode
                 {
                     Recipe = rec,
                     Location = targetLoc,
-                    TargetItemsPerMinute = needed
+                    TargetItemsPerMinute = needed,
+                    Size = new Size(300, calcHeight)
                 };
 
                 parent.InputNodes.Add(node);
@@ -237,18 +456,17 @@ namespace EndfieldModeler
         {
             Point safeLoc = desiredLoc;
             bool occupied = true;
-
             while (occupied)
             {
                 occupied = false;
                 foreach (var existingNode in _nodes)
                 {
                     Rectangle existingRect = new Rectangle(existingNode.Location, existingNode.Size);
-                    Rectangle newRect = new Rectangle(safeLoc, new Size(300, 200));
+                    Rectangle newRect = new Rectangle(safeLoc, new Size(300, 250));
 
                     if (existingRect.IntersectsWith(newRect))
                     {
-                        safeLoc.Y += 220;
+                        safeLoc.Y += existingRect.Height + 20;
                         occupied = true;
                         break;
                     }
@@ -264,17 +482,13 @@ namespace EndfieldModeler
             _lastMousePos = e.Location;
             PointF worldPos = ScreenToWorld(e.Location);
 
-            if (e.Button == MouseButtons.Right)
+            if (_searchPanel.Visible)
             {
-                _searchPanel.Location = e.Location;
-                _searchPanel.Visible = true;
-                _searchBox.Text = "";
-                UpdateSearchList("");
-                _searchBox.Focus();
-                return;
+                if (!_searchPanel.Bounds.Contains(e.Location) && !_btnCreateProduction.Bounds.Contains(e.Location))
+                {
+                    _searchPanel.Visible = false;
+                }
             }
-
-            _searchPanel.Visible = false;
 
             var hit = _nodes.LastOrDefault(n => new Rectangle(n.Location, n.Size).Contains((int)worldPos.X, (int)worldPos.Y));
             if (hit != null)
@@ -339,8 +553,18 @@ namespace EndfieldModeler
         private void OnMouseWheel(object sender, MouseEventArgs e)
         {
             float factor = e.Delta > 0 ? 1.1f : 0.9f;
-            _zoom = Math.Max(0.1f, Math.Min(_zoom * factor, 3.0f));
-            Invalidate();
+            float newZoom = Math.Max(0.1f, Math.Min(_zoom * factor, 3.0f));
+
+            if (newZoom != _zoom)
+            {
+                PointF worldMousePos = ScreenToWorld(e.Location);
+
+                _zoom = newZoom;
+                _viewOffset.X = e.X - (worldMousePos.X * _zoom);
+                _viewOffset.Y = e.Y - (worldMousePos.Y * _zoom);
+
+                Invalidate();
+            }
         }
 
         private void OnKeyDown(object sender, KeyEventArgs e)
@@ -369,17 +593,42 @@ namespace EndfieldModeler
             if (n.LabelOffsets.ContainsKey(prev.Id)) { mid.X += n.LabelOffsets[prev.Id].X; mid.Y += n.LabelOffsets[prev.Id].Y; }
             return mid;
         }
-
+        
         private void OnPaint(object sender, PaintEventArgs e)
         {
             e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
             e.Graphics.InterpolationMode = InterpolationMode.Low;
+
             e.Graphics.TranslateTransform(_viewOffset.X, _viewOffset.Y);
             e.Graphics.ScaleTransform(_zoom, _zoom);
 
             DrawGrid(e.Graphics);
             foreach (var n in _nodes) DrawNodeConnections(e.Graphics, n);
             foreach (var n in _nodes) DrawNode(e.Graphics, n);
+
+            e.Graphics.ResetTransform();
+            DrawControlsOverlay(e.Graphics);
+        }
+
+        private void DrawControlsOverlay(Graphics g)
+        {
+            string controlsText =
+                "• Canvas Panning: Hold Left-Click on background or Middle-Mouse\n" +
+                "• Move Nodes: Hold Left-Click on node\n" +
+                "• Zoom: Mouse Wheel\n" +
+                "• Create: Use button at the top\n" +
+                "• Undo/Redo: Ctrl + Z / Ctrl + Y";
+
+            Font controlsFont = new Font("Segoe UI", 12f);
+            Color textColor = Color.FromArgb(150, 200, 200, 200);
+
+            Size textSize = TextRenderer.MeasureText(controlsText, controlsFont);
+            Point drawPos = new Point(this.ClientSize.Width - textSize.Width - 20, 20);
+
+            using (SolidBrush brush = new SolidBrush(textColor))
+            {
+                g.DrawString(controlsText, controlsFont, brush, drawPos);
+            }
         }
 
         private void DrawGrid(Graphics g)
@@ -402,51 +651,66 @@ namespace EndfieldModeler
 
             Image? icon = GetIcon(n.Recipe.ItemName);
             if (icon != null) g.DrawImage(icon, b.X + 10, b.Y + 10, 24, 24);
-
             g.DrawString($"{n.Recipe.OutputAmount}x {n.Recipe.ItemName}", _fontBold, Brushes.White, b.X + 40, b.Y + 14);
 
-            if (n.Recipe.IsRawResource)
+            if (isRoot && !n.Recipe.IsRawResource)
             {
-                g.DrawString($"Total Demand: {n.TargetItemsPerMinute:0.#}/min", _fontBold, Brushes.Cyan, b.X + 10, b.Bottom - 25);
+                string rateText = $"{n.TargetItemsPerMinute:0.#}/min";
+                Size sz = TextRenderer.MeasureText(rateText, _fontBold);
+                g.DrawString(rateText, _fontBold, Brushes.LightGreen, b.Right - sz.Width - 10, b.Y + 14);
             }
-            else
+
+            using (Pen separatorPen = new Pen(Color.FromArgb(80, 80, 90), 1))
             {
-                float exact = n.GetExactMachines();
-
-                g.DrawString($"({exact:0.##}x)", _fontSmall, Brushes.Gray, b.X + 10, b.Bottom - 25);
-
-                Image? mIcon = GetIcon(n.Recipe.MachineName);
-                if (mIcon != null)
-                {
-                    g.DrawImage(mIcon, b.X + 55, b.Bottom - 28, 20, 20);
-                    g.DrawString($"{(int)Math.Ceiling(exact)}x {n.Recipe.MachineName}", _fontBold, Brushes.Orange, b.X + 80, b.Bottom - 25);
-                }
-                else
-                {
-                    g.DrawString($"{(int)Math.Ceiling(exact)}x {n.Recipe.MachineName}", _fontBold, Brushes.Orange, b.X + 60, b.Bottom - 25);
-                }
-
-                if (isRoot)
-                {
-                    g.DrawString($"{n.TargetItemsPerMinute:0.#} /min", _fontBold, Brushes.LightGreen, b.Right - 90, b.Y + 35);
-
-                    Rectangle btnMinus = new Rectangle(b.Right - 75, b.Bottom - 35, 30, 25);
-                    Rectangle btnPlus = new Rectangle(b.Right - 40, b.Bottom - 35, 30, 25);
-
-                    g.FillRectangle(Brushes.Firebrick, btnMinus);
-                    g.FillRectangle(Brushes.ForestGreen, btnPlus);
-
-                    g.DrawString("-", _fontBold, Brushes.White, btnMinus.X + 10, btnMinus.Y + 4);
-                    g.DrawString("+", _fontBold, Brushes.White, btnPlus.X + 8, btnPlus.Y + 4);
-                }
+                g.DrawLine(separatorPen, b.X + 10, b.Y + 42, b.Right - 10, b.Y + 42);
             }
 
             for (int i = 0; i < n.Recipe.Inputs.Count; i++)
             {
-                int y = b.Y + 55 + (i * 25);
+                int y = b.Y + 55 + (i * 30);
+                Rectangle ingRect = new Rectangle(b.X + 8, y - 4, b.Width - 16, 26);
+
+                using (SolidBrush ingBg = new SolidBrush(Color.FromArgb(50, 65, 85)))
+                {
+                    g.FillRectangle(ingBg, ingRect);
+                }
+
                 Image? ii = GetIcon(n.Recipe.Inputs[i].Name);
-                if (ii != null) g.DrawImage(ii, b.X + 10, y, 16, 16);
-                g.DrawString($"{n.Recipe.Inputs[i].Amount}x {n.Recipe.Inputs[i].Name}", _fontSmall, Brushes.Silver, b.X + 32, y);
+                if (ii != null) g.DrawImage(ii, b.X + 12, y, 18, 18);
+                g.DrawString($"{n.Recipe.Inputs[i].Amount}x {n.Recipe.Inputs[i].Name}", _fontSmall, Brushes.Silver, b.X + 36, y + 1);
+            }
+
+            using (Pen separatorPen = new Pen(Color.FromArgb(80, 80, 90), 1))
+            {
+                g.DrawLine(separatorPen, b.X + 10, b.Bottom - 38, b.Right - 10, b.Bottom - 38);
+            }
+
+            if (n.Recipe.IsRawResource)
+            {
+                g.DrawString($"Total Demand: {n.TargetItemsPerMinute:0.#}/min", _fontBold, Brushes.Cyan, b.X + 10, b.Bottom - 28);
+            }
+            else
+            {
+                float exact = n.GetExactMachines();
+                g.DrawString($"({exact:0.##}x)", _fontSmall, Brushes.Gray, b.X + 10, b.Bottom - 28);
+
+                Image? mIcon = GetIcon(n.Recipe.MachineName);
+                if (mIcon != null)
+                {
+                    g.DrawImage(mIcon, b.X + 55, b.Bottom - 31, 22, 22);
+                    g.DrawString($"{(int)Math.Ceiling(exact)}x {n.Recipe.MachineName}", _fontBold, Brushes.Orange, b.X + 82, b.Bottom - 28);
+                }
+
+                if (isRoot)
+                {
+                    Rectangle btnMinus = new Rectangle(b.Right - 75, b.Bottom - 30, 30, 22);
+                    Rectangle btnPlus = new Rectangle(b.Right - 40, b.Bottom - 30, 30, 22);
+
+                    g.FillRectangle(Brushes.Firebrick, btnMinus);
+                    g.FillRectangle(Brushes.ForestGreen, btnPlus);
+                    g.DrawString("-", _fontSmallBold, Brushes.White, btnMinus.X + 10, btnMinus.Y + 3);
+                    g.DrawString("+", _fontSmallBold, Brushes.White, btnPlus.X + 8, btnPlus.Y + 3);
+                }
             }
         }
 
@@ -455,17 +719,26 @@ namespace EndfieldModeler
             foreach (var prev in n.InputNodes)
             {
                 int idx = n.Recipe.Inputs.FindIndex(x => x.Name == prev.Recipe.ItemName);
+                if (idx == -1) continue;
+
                 Point p1 = new Point(prev.Location.X + prev.Size.Width, prev.Location.Y + prev.Size.Height / 2);
-                Point p2 = new Point(n.Location.X, n.Location.Y + 55 + (idx * 25));
+
+                int targetY = n.Location.Y + 59 + (idx * 30);
+                Point p2 = new Point(n.Location.X, targetY);
 
                 using (Pen p = new Pen(Color.FromArgb(200, 200, 100), 2))
+                {
                     g.DrawBezier(p, p1, new Point(p1.X + 60, p1.Y), new Point(p2.X - 60, p2.Y), p2);
+                }
 
                 Point lp = GetLabelPos(n, prev);
                 string txt = $"{prev.TargetItemsPerMinute:0.#} /min";
 
                 Size sz = TextRenderer.MeasureText(txt, _fontSmallBold);
-                g.FillRectangle(new SolidBrush(Color.FromArgb(20, 20, 25)), lp.X - sz.Width / 2, lp.Y - sz.Height / 2, sz.Width, sz.Height);
+                using (SolidBrush bgBrush = new SolidBrush(Color.FromArgb(20, 20, 25)))
+                {
+                    g.FillRectangle(bgBrush, lp.X - sz.Width / 2, lp.Y - sz.Height / 2, sz.Width, sz.Height);
+                }
                 g.DrawString(txt, _fontSmallBold, Brushes.Yellow, lp.X - sz.Width / 2, lp.Y - sz.Height / 2);
             }
         }
