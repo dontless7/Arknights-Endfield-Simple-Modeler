@@ -33,8 +33,8 @@ Built quickly to help visualize big production setups and keep things organized.
     - **Scroll the mouse wheel** to zoom in/out of the workspace
 
 ## Screenshots
-### Tal-HC-Battery Production Line
-![Tal-HC-Battery](screenshots/tal_hc_battery.png)
+### HC-Battery Production Line
+![HC-Battery](screenshots/hc_battery.png)
 
 ### Dense Ferrium Powder Production Line
 ![Dense Ferrium Powder](screenshots/dense_ferrium_powder.png)
