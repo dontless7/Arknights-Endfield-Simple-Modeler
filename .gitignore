@@ -8,9 +8,8 @@ obj/
 *.suo
 
 # Build results
-[Bb]uild/
 [Dd]ebug/
 [Rr]elease/
 
-# Rider
+# Rider (falls du mal benutzt)
 .idea/
