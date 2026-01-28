@@ -35,7 +35,7 @@ Built quickly to help visualize big production setups and keep things organized.
     - **Scroll the mouse wheel** to zoom in/out of the workspace
 
 ## Screenshots
-### HC-Battery Production Line
+### HC Valley Battery Production Line
 ![HC-Battery](screenshots/hc_valley_battery.png)
 
 ### Dense Ferrium Powder Production Line

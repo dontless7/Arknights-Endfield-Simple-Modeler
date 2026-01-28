@@ -41,7 +41,7 @@ namespace EndfieldModeler
             DoubleBuffered = true;
             Size = new Size(1400, 900);
             BackColor = Color.FromArgb(20, 20, 25);
-            Text = "Arknights:Endfield Simple Modeler (AESM) v1.1.0-alpha";
+            Text = "Arknights:Endfield Simple Modeler (AESM) v1.2.0-alpha";
             KeyPreview = true;
 
             InitializeRecipes();
