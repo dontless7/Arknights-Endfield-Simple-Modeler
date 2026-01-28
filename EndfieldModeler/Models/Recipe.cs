@@ -8,5 +8,6 @@
         public float OutputAmount { get; set; } = 1;
         public List<Ingredient> Inputs { get; set; } = new List<Ingredient>();
         public bool IsRawResource { get; set; }
+        public float PowerConsumption { get; set; }
     }
 }

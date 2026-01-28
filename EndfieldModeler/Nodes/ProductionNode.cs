@@ -31,5 +31,20 @@ namespace EndfieldModeler.Nodes
             float itemsPerMachinePerMin = (60f / Recipe.CraftingTimeSeconds) * Recipe.OutputAmount;
             return TargetItemsPerMinute / itemsPerMachinePerMin;
         }
+
+        public float GetNodePower()
+        {
+            return (float)Math.Ceiling(GetExactMachines()) * Recipe.PowerConsumption;
+        }
+
+        public float GetTotalTreePower()
+        {
+            float total = GetNodePower();
+            foreach (var child in InputNodes)
+            {
+                total += child.GetTotalTreePower();
+            }
+            return total;
+        }
     }
 }

@@ -23,18 +23,20 @@ Built quickly to help visualize big production setups and keep things organized.
    - Production item  
    - Production need  
    - Machine required and how many  
+   - **Power usage**  
 7. Node connections show **parts per minute**.  
 8. On the production line **END node**, use **+ / -** to increase/decrease the amount.  
 9. For ores, the **total demand per minute** is displayed.  
-10. **Undo/Redo node positions:**  
+10. On the **END node**, the **total power usage** of the production line is shown *(excluding mining rigs)*.  
+11. **Undo/Redo node positions:**  
     - `Ctrl + Z` → undo node movement  
     - `Ctrl + Y` → redo node movement  
-11. **Zoom:**  
+12. **Zoom:**  
     - **Scroll the mouse wheel** to zoom in/out of the workspace
 
 ## Screenshots
 ### HC-Battery Production Line
-![HC-Battery](screenshots/hc_battery.png)
+![HC-Battery](screenshots/hc_valley_battery.png)
 
 ### Dense Ferrium Powder Production Line
 ![Dense Ferrium Powder](screenshots/dense_ferrium_powder.png)

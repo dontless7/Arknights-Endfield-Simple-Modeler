@@ -10,11 +10,11 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<None Remove="Assets\**\*" />
+		<None Remove="Item Files\**\*" />
 	</ItemGroup>
 
 	<ItemGroup>
-		<Content Include="Assets\**\*">
+		<Content Include="Item Files\**\*">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</Content>
 	</ItemGroup>

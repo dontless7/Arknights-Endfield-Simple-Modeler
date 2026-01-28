@@ -1,5 +1,6 @@
 using EndfieldModeler.Models;
 using EndfieldModeler.Nodes;
+using System.Diagnostics;
 using System.Drawing.Drawing2D;
 using System.IO;
 
@@ -87,54 +88,42 @@ namespace EndfieldModeler
 
         private void InitializeRecipes()
         {
-            void AddRecipe(string name, string machine, float timeInSeconds, float outputAmount, params (string, float)[] ins) =>
-                _recipes.Add(new Recipe { ItemName = name, MachineName = machine, CraftingTimeSeconds = timeInSeconds, OutputAmount = outputAmount, Inputs = ins.Select(x => new Ingredient { Name = x.Item1, Amount = x.Item2 }).ToList() });
-            void AddRaw(string name) => _recipes.Add(new Recipe { ItemName = name, MachineName = "World resource", IsRawResource = true });
+            var powerValues = new Dictionary<string, float>
+            {
+                { "Planting Unit", 20f },
+                { "Seed-Picking Unit", 10f },
+                { "Refining Unit", 5f },
+                { "Shredding Unit", 5f },
+                { "Grinding Unit", 50f },
+                { "Moulding Unit", 10f },
+                { "Fitting Unit", 20f },
+                { "Gearing Unit", 10f },
+                { "Packaging Unit", 20f },
+                { "Filling Unit", 20f },
+                { "World resource", 0f }
+            };
 
-            AddRaw("Originium Ore");
-            AddRaw("Amethyst Ore");
-            AddRaw("Ferrium Ore");
+            void AddRecipe(string name, string machine, float timeInSeconds, float outputAmount, params (string, float)[] ins)
+            {
+                float watts = powerValues.ContainsKey(machine) ? powerValues[machine] : 0;
+                _recipes.Add(new Recipe
+                {
+                    ItemName = name,
+                    MachineName = machine,
+                    CraftingTimeSeconds = timeInSeconds,
+                    OutputAmount = outputAmount,
+                    PowerConsumption = watts,
+                    Inputs = ins.Select(x => new Ingredient { Name = x.Item1, Amount = x.Item2 }).ToList()
+                });
+            }
 
-            AddRecipe("Amethyst Part", "Fitting Unit", 2, 1, ("Amethyst Fiber", 1));
-            AddRecipe("Amethyst Fiber", "Refining Unit", 2, 1, ("Amethyst Ore", 1));
-            AddRecipe("HC Battery", "Packaging Unit", 10, 1, ("Steel Part", 10), ("Dense Originium Powder", 15));
-            AddRecipe("Steel Part", "Fitting Unit", 2, 1, ("Steel", 1));
-            AddRecipe("Steel", "Refining Unit", 2, 1, ("Dense Ferrium Powder", 1));
-            AddRecipe("Dense Ferrium Powder", "Grinding Unit", 2, 1, ("Sandleaf Powder", 1), ("Ferrium Powder", 2));
-            AddRecipe("Ferrium Powder", "Shredding Unit", 2, 1, ("Ferrium", 1));
-            AddRecipe("Ferrium", "Refining Unit", 2, 1, ("Ferrium Ore", 1));
-            AddRecipe("Dense Originium Powder", "Grinding Unit", 2, 1, ("Sandleaf Powder", 1), ("Originium Powder", 2));
-            AddRecipe("Originium Powder", "Shredding Unit", 2, 1, ("Originium Ore", 1));
-            AddRecipe("Sandleaf Powder", "Shredding Unit", 2, 3, ("Sandleaf", 1));
-            AddRecipe("Sandleaf", "Planting Unit", 2, 1, ("Sandleaf Seed", 1));
+            void AddRaw(string name) => _recipes.Add(new Recipe { ItemName = name, MachineName = "World resource", IsRawResource = true, PowerConsumption = 0 });
+
+            // Natural Resources
             AddRecipe("Buckflower", "Planting Unit", 2, 1, ("Buckflower Seed", 1));
             AddRecipe("Buckflower Seed", "Seed-Picking Unit", 2, 2, ("Buckflower", 1));
+            AddRecipe("Sandleaf", "Planting Unit", 2, 1, ("Sandleaf Seed", 1));
             AddRecipe("Sandleaf Seed", "Seed-Picking Unit", 2, 2, ("Sandleaf", 1));
-            AddRecipe("Cryston Component", "Gearing Unit", 10, 1, ("Packed Origocrust", 10), ("Cryston Fiber", 10));
-            AddRecipe("Packed Origocrust", "Refining Unit", 2, 1, ("Dense Origocrust Powder", 1));
-            AddRecipe("Dense Origocrust Powder", "Refining Unit", 2, 1, ("Dense Originium Powder", 1));
-            AddRecipe("Cryston Fiber", "Refining Unit", 2, 1, ("Cryston Powder", 1));
-            AddRecipe("Cryston Powder", "Grinding Unit", 2, 1, ("Sandleaf Powder", 1), ("Amethyst Powder", 2));
-            AddRecipe("Amethyst Powder", "Shredding Unit", 2, 1, ("Amethyst Fiber", 1));
-            AddRecipe("Carbon", "Refining Unit", 2, 1, ("Buckflower", 1));
-            AddRecipe("Carbon", "Refining Unit", 2, 1, ("Sandleaf", 1));
-            AddRecipe("Origocrust", "Refining Unit", 2, 1, ("Originium Ore", 1));
-            AddRecipe("Stabilized Carbon", "Refining Unit", 2, 1, ("Dense Carbon Powder", 1));
-            AddRecipe("Carbon Powder", "Refining Unit", 2, 2, ("Sandleaf Powder", 3));
-            AddRecipe("Carbon Powder", "Shredding Unit", 2, 2, ("Carbon", 1));
-            AddRecipe("Origocrust Powder", "Shredding Unit", 2, 1, ("Origocrust", 1));
-            AddRecipe("Aketine Powder", "Shredding Unit", 2, 2, ("Aketine", 1));
-            AddRecipe("Dense Carbon Powder", "Grinding Unit", 2, 1, ("Sandleaf Powder", 1), ("Carbon Powder", 2));
-            AddRecipe("Amethyst Bottle", "Moulding Unit", 2, 1, ("Amethyst Fiber", 2));
-            AddRecipe("Ferrium Bottle", "Moulding Unit", 2, 1, ("Ferrium", 2));
-            AddRecipe("Cryston Bottle", "Moulding Unit", 2, 1, ("Cryston Fiber", 2));
-            AddRecipe("Steel Bottle", "Moulding Unit", 2, 1, ("Steel", 2));
-            AddRecipe("Ferrium Part", "Fitting Unit", 2, 1, ("Ferrium", 1));
-            AddRecipe("Amethyst Component", "Gearing Unit", 10, 1, ("Amethyst Fiber", 5), ("Origocrust", 5));
-            AddRecipe("Ferrium Component", "Gearing Unit", 10, 1, ("Ferrium", 10), ("Origocrust", 10));
-            AddRecipe("Cryston Part", "Fitting Unit", 2, 1, ("Cryston Fiber", 1));
-            AddRecipe("LC Battery", "Packaging Unit", 10, 1, ("Originium Powder", 10), ("Amethyst Part", 5));
-            AddRecipe("SC Battery", "Packaging Unit", 10, 1, ("Originium Powder", 15), ("Ferrium Part", 10));
             AddRecipe("Citrome", "Planting Unit", 2, 1, ("Citrome Seed", 1));
             AddRecipe("Citrome Seed", "Seed-Picking Unit", 2, 2, ("Citrome", 1));
             AddRecipe("Aketine", "Planting Unit", 2, 1, ("Aketine Seed", 1));
@@ -143,6 +132,88 @@ namespace EndfieldModeler
             AddRecipe("Jincao Seed", "Seed-Picking Unit", 2, 2, ("Jincao", 1));
             AddRecipe("Yazhen", "Planting Unit", 2, 1, ("Yazhen Seed", 1));
             AddRecipe("Yazhen Seed", "Seed-Picking Unit", 2, 2, ("Yazhen", 1));
+            AddRecipe("Reed Rye Seed", "Seed-Picking Unit", 2, 2, ("Reed Rye", 1));
+            AddRecipe("Tartpepper Seed", "Seed-Picking Unit", 2, 2, ("Tartpepper", 1));
+                // Natural Resources (Raw)
+                AddRaw("Originium Ore");
+                AddRaw("Amethyst Ore");
+                AddRaw("Ferrium Ore");
+
+            // AIC Products
+            AddRecipe("Carbon", "Refining Unit", 2, 1, ("Buckflower", 1));
+            AddRecipe("Carbon", "Refining Unit", 2, 1, ("Sandleaf", 1));
+            AddRecipe("Origocrust", "Refining Unit", 2, 1, ("Originium Ore", 1));
+            AddRecipe("Amethyst Fiber", "Refining Unit", 2, 1, ("Amethyst Ore", 1));
+            AddRecipe("Ferrium", "Refining Unit", 2, 1, ("Ferrium Ore", 1));
+            AddRecipe("Stabilized Carbon", "Refining Unit", 2, 1, ("Dense Carbon Powder", 1));
+            AddRecipe("Packed Origocrust", "Refining Unit", 2, 1, ("Dense Origocrust Powder", 1));
+            AddRecipe("Cryston Fiber", "Refining Unit", 2, 1, ("Cryston Powder", 1));
+            AddRecipe("Steel", "Refining Unit", 2, 1, ("Dense Ferrium Powder", 1));
+            AddRecipe("Carbon Powder", "Refining Unit", 2, 2, ("Sandleaf Powder", 3));
+            AddRecipe("Carbon Powder", "Shredding Unit", 2, 2, ("Carbon", 1));
+            AddRecipe("Originium Powder", "Shredding Unit", 2, 1, ("Originium Ore", 1));
+            AddRecipe("Origocrust Powder", "Shredding Unit", 2, 1, ("Origocrust", 1));
+            AddRecipe("Amethyst Powder", "Shredding Unit", 2, 1, ("Amethyst Fiber", 1));
+            AddRecipe("Ferrium Powder", "Shredding Unit", 2, 1, ("Ferrium", 1));
+            AddRecipe("Sandleaf Powder", "Shredding Unit", 2, 3, ("Sandleaf", 1));
+            AddRecipe("Aketine Powder", "Shredding Unit", 2, 2, ("Aketine", 1));
+            AddRecipe("Ground Buckflower Powder", "Grinding Unit", 2, 1, ("Sandleaf Powder", 1), ("Buckflower Powder", 2));
+            AddRecipe("Ground Citrome Powder", "Grinding Unit", 2, 1, ("Sandleaf Powder", 1), ("Citrome Powder", 2));
+            AddRecipe("Dense Carbon Powder", "Grinding Unit", 2, 1, ("Sandleaf Powder", 1), ("Carbon Powder", 2));
+            AddRecipe("Dense Originium Powder", "Grinding Unit", 2, 1, ("Sandleaf Powder", 1), ("Originium Powder", 2));
+            AddRecipe("Dense Origocrust Powder", "Refining Unit", 2, 1, ("Dense Originium Powder", 1));
+            AddRecipe("Cryston Powder", "Grinding Unit", 2, 1, ("Sandleaf Powder", 1), ("Amethyst Powder", 2));
+            AddRecipe("Dense Ferrium Powder", "Grinding Unit", 2, 1, ("Sandleaf Powder", 1), ("Ferrium Powder", 2));
+            AddRecipe("Amethyst Bottle", "Moulding Unit", 2, 1, ("Amethyst Fiber", 2));
+            AddRecipe("Ferrium Bottle", "Moulding Unit", 2, 1, ("Ferrium", 2));
+            AddRecipe("Cryston Bottle", "Moulding Unit", 2, 1, ("Cryston Fiber", 2));
+            AddRecipe("Steel Bottle", "Moulding Unit", 2, 1, ("Steel", 2));
+            AddRecipe("Amethyst Part", "Fitting Unit", 2, 1, ("Amethyst Fiber", 1));
+            AddRecipe("Ferrium Part", "Fitting Unit", 2, 1, ("Ferrium", 1));
+            AddRecipe("Cryston Part", "Fitting Unit", 2, 1, ("Cryston Fiber", 1));
+            AddRecipe("Steel Part", "Fitting Unit", 2, 1, ("Steel", 1));
+            AddRecipe("Amethyst Component", "Gearing Unit", 10, 1, ("Amethyst Fiber", 5), ("Origocrust", 5));
+            AddRecipe("Ferrium Component", "Gearing Unit", 10, 1, ("Ferrium", 10), ("Origocrust", 10));
+            AddRecipe("Cryston Component", "Gearing Unit", 10, 1, ("Packed Origocrust", 10), ("Cryston Fiber", 10));
+            AddRecipe("LC Valley Battery", "Packaging Unit", 10, 1, ("Originium Powder", 10), ("Amethyst Part", 5));
+            AddRecipe("SC Valley Battery", "Packaging Unit", 10, 1, ("Originium Powder", 15), ("Ferrium Part", 10));
+            AddRecipe("HC Valley Battery", "Packaging Unit", 10, 1, ("Steel Part", 10), ("Dense Originium Powder", 15));
+
+            // Usable Items
+            AddRecipe("Industrial Explosive", "Packaging Unit", 10, 1, ("Aketine Powder", 1), ("Amethyst Part", 5));
+            AddRecipe("Buckflower Powder", "Shredding Unit", 2, 2, ("Buckflower", 1));
+            AddRecipe("Citrome Powder", "Shredding Unit", 2, 2, ("Citrome", 1));
+            AddRecipe("Jincao Powder", "Shredding Unit", 2, 2, ("Jincao", 1));
+            AddRecipe("Yazhen Powder", "Shredding Unit", 2, 2, ("Yazhen", 1));
+                // Firebuckle Powder        (Not automatable)
+                // Citromix                 (Not automatable)
+            AddRecipe("Buck Capsule [C]", "Filling Unit", 10, 1, ("Buckflower Powder", 5), ("Amethyst Bottle", 5));
+            AddRecipe("Buck Capsule [B]", "Filling Unit", 10, 1, ("Buckflower Powder", 10), ("Ferrium Bottle", 10));
+            AddRecipe("Canned Citrome [C]", "Filling Unit", 10, 1, ("Citrome Powder", 5), ("Amethyst Bottle", 5));
+            AddRecipe("Canned Citrome [B]", "Filling Unit", 10, 1, ("Citrome Powder", 10), ("Ferrium Bottle", 10));
+            AddRecipe("Buck Capsule [A]", "Filling Unit", 10, 1, ("Steel Bottle", 10), ("Ground Buckflower Powder", 10));
+            AddRecipe("Canned Citrome [A]", "Filling Unit", 10, 1, ("Ground Citrome Powder", 10), ("Steel Bottle", 10));
+                // Buckpill [S]             (Not automatable)
+                // Arts Vial                (Not automatable)
+                // Kunst Vial               (Not automatable)
+                // Arts Tube                (Not automatable)
+                // Meaty Buckflower Stew    (Not automatable)
+                // Handmade Weirdrop        (Not automatable)
+                // Sesqa Style Fillet       (Not automatable)
+                // Instant Bone Soup        (Not automatable)
+                // Stew Meeting             (Not automatable)
+                // Mini Honey Slugpudding   (Not automatable)
+                // Sod-Turning Meat Soup    (Not automatable)
+                // Jakubs Legacy            (Not automatable)
+                // Cartilage Tack           (Not automatable)
+                // Edible Denstack          (Not automatable)
+                // Hazefyre Blossom         (Not automatable)
+                // Old Man Johns Burger     (Not automatable)
+                // Cosmo-Melto Jelly        (Not automatable)
+                // Hub Emergency Ration     (Not automatable)
+                // Superhot Fruit Preserves (Not automatable)
+
+            //ignore();
         }
 
         private void InitializeSearchMenu()
@@ -362,16 +433,38 @@ namespace EndfieldModeler
             _searchList.PerformLayout();
         }
 
+        private void ignore()
+        {
+            Debug.WriteLine("================================");
+
+            foreach (Recipe r in _recipes)
+            {
+                if (GetIcon(r.ItemName) == null)
+                {
+                    Debug.WriteLine(r.ItemName);
+                }
+            }
+
+            Debug.WriteLine("================================");
+        }
+
         private Image? GetIcon(string name)
         {
             if (_iconCache.TryGetValue(name, out var img)) return img;
 
-            string cleanName = name.Replace("-", "_").Replace(" ", "_").ToLower() + ".png";
+            string cleanName = name
+                .Replace("-", "_")
+                .Replace(" ", "_")
+                .Replace("[", "")
+                .Replace("]", "")
+                .ToLower() + ".png";
+
             string baseDir = AppDomain.CurrentDomain.BaseDirectory;
             string[] paths = {
-                Path.Combine(baseDir, "Assets", "AIC Products", cleanName),
-                Path.Combine(baseDir, "Assets", "Naturals", cleanName),
-                Path.Combine(baseDir, "Assets", "Machines", cleanName)
+                Path.Combine(baseDir, "Item Files", "AIC Products", cleanName),
+                Path.Combine(baseDir, "Item Files", "Natural Resources", cleanName),
+                Path.Combine(baseDir, "Item Files", "Facilities", cleanName),
+                Path.Combine(baseDir, "Item Files", "Usable Items", cleanName)
             };
 
             foreach (var path in paths)
@@ -490,7 +583,18 @@ namespace EndfieldModeler
                 }
             }
 
-            var hit = _nodes.LastOrDefault(n => new Rectangle(n.Location, n.Size).Contains((int)worldPos.X, (int)worldPos.Y));
+            var hit = _nodes.LastOrDefault(n => {
+                Rectangle rect = new Rectangle(n.Location, n.Size);
+                bool isRoot = !_nodes.Any(o => o.InputNodes.Contains(n));
+
+                if (isRoot)
+                {
+                    rect.Width += 40;
+                }
+
+                return rect.Contains((int)worldPos.X, (int)worldPos.Y);
+            });
+
             if (hit != null)
             {
                 bool isRoot = !_nodes.Any(o => o.InputNodes.Contains(hit));
@@ -499,18 +603,18 @@ namespace EndfieldModeler
                     int relX = (int)worldPos.X - hit.Location.X;
                     int relY = (int)worldPos.Y - hit.Location.Y;
 
-                    if (relY > hit.Size.Height - 40)
+                    if (relX > hit.Size.Width + 5)
                     {
                         float itemsPerCycle = (60f / hit.Recipe.CraftingTimeSeconds) * hit.Recipe.OutputAmount;
 
-                        if (relX > hit.Size.Width - 40)
+                        if (relY >= 0 && relY <= 30)
                         {
                             hit.TargetItemsPerMinute += itemsPerCycle;
                             hit.UpdatePredecessors();
                             Invalidate();
                             return;
                         }
-                        else if (relX > hit.Size.Width - 80 && relX < hit.Size.Width - 40)
+                        else if (relY >= 35 && relY <= 65)
                         {
                             if (hit.TargetItemsPerMinute > itemsPerCycle + 0.1f)
                             {
@@ -525,7 +629,10 @@ namespace EndfieldModeler
                 SaveUndo();
                 _draggedNode = hit;
             }
-            else { _isPanning = true; }
+            else
+            {
+                _isPanning = true;
+            }
         }
 
         private void OnMouseMove(object sender, MouseEventArgs e)
@@ -658,6 +765,9 @@ namespace EndfieldModeler
                 string rateText = $"{n.TargetItemsPerMinute:0.#}/min";
                 Size sz = TextRenderer.MeasureText(rateText, _fontBold);
                 g.DrawString(rateText, _fontBold, Brushes.LightGreen, b.Right - sz.Width - 10, b.Y + 14);
+
+                string totalPowerText = "Total Power Use: " + FormatPowerValue(n.GetTotalTreePower()) + " (Without Mining Rigs)";
+                g.DrawString(totalPowerText, _fontBold, Brushes.Yellow, b.X, b.Y - 20);
             }
 
             using (Pen separatorPen = new Pen(Color.FromArgb(80, 80, 90), 1))
@@ -669,11 +779,7 @@ namespace EndfieldModeler
             {
                 int y = b.Y + 55 + (i * 30);
                 Rectangle ingRect = new Rectangle(b.X + 8, y - 4, b.Width - 16, 26);
-
-                using (SolidBrush ingBg = new SolidBrush(Color.FromArgb(50, 65, 85)))
-                {
-                    g.FillRectangle(ingBg, ingRect);
-                }
+                using (SolidBrush ingBg = new SolidBrush(Color.FromArgb(50, 65, 85))) g.FillRectangle(ingBg, ingRect);
 
                 Image? ii = GetIcon(n.Recipe.Inputs[i].Name);
                 if (ii != null) g.DrawImage(ii, b.X + 12, y, 18, 18);
@@ -701,17 +807,30 @@ namespace EndfieldModeler
                     g.DrawString($"{(int)Math.Ceiling(exact)}x {n.Recipe.MachineName}", _fontBold, Brushes.Orange, b.X + 82, b.Bottom - 28);
                 }
 
+                string powerNodeText = "Power Use: " + FormatPowerValue(n.GetNodePower());
+                Size pSize = TextRenderer.MeasureText(powerNodeText, _fontSmallBold);
+                g.DrawString(powerNodeText, _fontSmallBold, Brushes.LightSkyBlue, b.Right - pSize.Width - 10, b.Bottom - 28);
+
                 if (isRoot)
                 {
-                    Rectangle btnMinus = new Rectangle(b.Right - 75, b.Bottom - 30, 30, 22);
-                    Rectangle btnPlus = new Rectangle(b.Right - 40, b.Bottom - 30, 30, 22);
+                    Rectangle btnPlus = new Rectangle(b.Right + 5, b.Y, 30, 30);
+                    Rectangle btnMinus = new Rectangle(b.Right + 5, b.Y + 35, 30, 30);
 
-                    g.FillRectangle(Brushes.Firebrick, btnMinus);
                     g.FillRectangle(Brushes.ForestGreen, btnPlus);
-                    g.DrawString("-", _fontSmallBold, Brushes.White, btnMinus.X + 10, btnMinus.Y + 3);
-                    g.DrawString("+", _fontSmallBold, Brushes.White, btnPlus.X + 8, btnPlus.Y + 3);
+                    g.FillRectangle(Brushes.Firebrick, btnMinus);
+                    g.DrawString("+", _fontBold, Brushes.White, btnPlus.X + 7, btnPlus.Y + 5);
+                    g.DrawString("-", _fontBold, Brushes.White, btnMinus.X + 9, btnMinus.Y + 5);
                 }
             }
+        }
+
+        private string FormatPowerValue(float value)
+        {
+            if (value >= 1000)
+            {
+                return (value / 1000f).ToString("0.##") + "K";
+            }
+            return value.ToString("0.##");
         }
 
         private void DrawNodeConnections(Graphics g, ProductionNode n)
