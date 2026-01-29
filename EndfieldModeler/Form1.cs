@@ -41,7 +41,7 @@ namespace EndfieldModeler
             DoubleBuffered = true;
             Size = new Size(1400, 900);
             BackColor = Color.FromArgb(20, 20, 25);
-            Text = "Arknights:Endfield Simple Modeler (AESM) v1.2.2-alpha";
+            Text = "Arknights:Endfield Simple Modeler (AESM) v1.3.0-alpha";
             KeyPreview = true;
 
             InitializeRecipes();
@@ -100,7 +100,9 @@ namespace EndfieldModeler
                 { "Gearing Unit", 10f },
                 { "Packaging Unit", 20f },
                 { "Filling Unit", 20f },
-                { "World resource", 0f }
+                { "World resource", 0f },
+                { "Forge of the Sky", 50f },
+                { "Fluid Pump", 10f }
             };
 
             void AddRecipe(string name, string machine, float timeInSeconds, float outputAmount, params (string, float)[] ins)
@@ -132,6 +134,7 @@ namespace EndfieldModeler
             AddRecipe("Jincao Seed", "Seed-Picking Unit", 2, 2, ("Jincao", 1));
             AddRecipe("Yazhen", "Planting Unit", 2, 1, ("Yazhen Seed", 1));
             AddRecipe("Yazhen Seed", "Seed-Picking Unit", 2, 2, ("Yazhen", 1));
+            AddRecipe("Clean Water", "Fluid Pump", 1, 1, ("", 0));
             AddRecipe("Reed Rye Seed", "Seed-Picking Unit", 2, 2, ("Reed Rye", 1));
             AddRecipe("Tartpepper Seed", "Seed-Picking Unit", 2, 2, ("Tartpepper", 1));
                 // Natural Resources (Raw)
@@ -149,6 +152,7 @@ namespace EndfieldModeler
             AddRecipe("Packed Origocrust", "Refining Unit", 2, 1, ("Dense Origocrust Powder", 1));
             AddRecipe("Cryston Fiber", "Refining Unit", 2, 1, ("Cryston Powder", 1));
             AddRecipe("Steel", "Refining Unit", 2, 1, ("Dense Ferrium Powder", 1));
+            AddRecipe("Xiranite", "Forge of the Sky", 2, 1, ("Clean Water", 1), ("Stabilized Carbon", 2));
             AddRecipe("Carbon Powder", "Refining Unit", 2, 2, ("Sandleaf Powder", 3));
             AddRecipe("Carbon Powder", "Shredding Unit", 2, 2, ("Carbon", 1));
             AddRecipe("Originium Powder", "Shredding Unit", 2, 1, ("Originium Ore", 1));
@@ -175,6 +179,7 @@ namespace EndfieldModeler
             AddRecipe("Amethyst Component", "Gearing Unit", 10, 1, ("Amethyst Fiber", 5), ("Origocrust", 5));
             AddRecipe("Ferrium Component", "Gearing Unit", 10, 1, ("Ferrium", 10), ("Origocrust", 10));
             AddRecipe("Cryston Component", "Gearing Unit", 10, 1, ("Packed Origocrust", 10), ("Cryston Fiber", 10));
+            AddRecipe("Xiranite Component", "Gearing Unit", 10, 1, ("Xiranite", 10), ("Packed Origocrust", 10));
             AddRecipe("LC Valley Battery", "Packaging Unit", 10, 1, ("Originium Powder", 10), ("Amethyst Part", 5));
             AddRecipe("SC Valley Battery", "Packaging Unit", 10, 1, ("Originium Powder", 15), ("Ferrium Part", 10));
             AddRecipe("HC Valley Battery", "Packaging Unit", 10, 1, ("Steel Part", 10), ("Dense Originium Powder", 15));
@@ -583,6 +588,12 @@ namespace EndfieldModeler
                 }
             }
 
+            if (e.Button == MouseButtons.Middle)
+            {
+                _isPanning = true;
+                return;
+            }
+
             var hit = _nodes.LastOrDefault(n => {
                 Rectangle rect = new Rectangle(n.Location, n.Size);
                 bool isRoot = !_nodes.Any(o => o.InputNodes.Contains(n));
@@ -626,8 +637,12 @@ namespace EndfieldModeler
                         }
                     }
                 }
-                SaveUndo();
-                _draggedNode = hit;
+
+                if (e.Button == MouseButtons.Left)
+                {
+                    SaveUndo();
+                    _draggedNode = hit;
+                }
             }
             else
             {
@@ -777,6 +792,8 @@ namespace EndfieldModeler
 
             for (int i = 0; i < n.Recipe.Inputs.Count; i++)
             {
+                if (string.IsNullOrWhiteSpace(n.Recipe.Inputs[i].Name)) continue;
+
                 int y = b.Y + 55 + (i * 30);
                 Rectangle ingRect = new Rectangle(b.X + 8, y - 4, b.Width - 16, 26);
                 using (SolidBrush ingBg = new SolidBrush(Color.FromArgb(50, 65, 85))) g.FillRectangle(ingBg, ingRect);
@@ -801,11 +818,13 @@ namespace EndfieldModeler
                 g.DrawString($"({exact:0.##}x)", _fontSmall, Brushes.Gray, b.X + 10, b.Bottom - 28);
 
                 Image? mIcon = GetIcon(n.Recipe.MachineName);
+                int textXOffset = 55;
                 if (mIcon != null)
                 {
                     g.DrawImage(mIcon, b.X + 55, b.Bottom - 31, 22, 22);
-                    g.DrawString($"{(int)Math.Ceiling(exact)}x {n.Recipe.MachineName}", _fontBold, Brushes.Orange, b.X + 82, b.Bottom - 28);
+                    textXOffset = 82;
                 }
+                g.DrawString($"{(int)Math.Ceiling(exact)}x {n.Recipe.MachineName}", _fontBold, Brushes.Orange, b.X + textXOffset, b.Bottom - 28);
 
                 string powerNodeText = "Power Use: " + FormatPowerValue(n.GetNodePower());
                 Size pSize = TextRenderer.MeasureText(powerNodeText, _fontSmallBold);
