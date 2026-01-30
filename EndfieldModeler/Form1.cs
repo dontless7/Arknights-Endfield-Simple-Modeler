@@ -41,7 +41,7 @@ namespace EndfieldModeler
             DoubleBuffered = true;
             Size = new Size(1400, 900);
             BackColor = Color.FromArgb(20, 20, 25);
-            Text = "Arknights:Endfield Simple Modeler (AESM) v1.3.0-alpha";
+            Text = "Arknights:Endfield Simple Modeler (AESM) v1.4.0-alpha";
             KeyPreview = true;
 
             InitializeRecipes();
@@ -102,7 +102,8 @@ namespace EndfieldModeler
                 { "Filling Unit", 20f },
                 { "World resource", 0f },
                 { "Forge of the Sky", 50f },
-                { "Fluid Pump", 10f }
+                { "Fluid Pump", 10f },
+                { "Reactor Crucible", 50 }
             };
 
             void AddRecipe(string name, string machine, float timeInSeconds, float outputAmount, params (string, float)[] ins)
@@ -143,6 +144,9 @@ namespace EndfieldModeler
                 AddRaw("Ferrium Ore");
 
             // AIC Products
+            AddRecipe("Jincao Solution", "Reactor Crucible", 2, 1, ("Clean Water", 1), ("Jincao Powder", 1));
+            AddRecipe("Yazhen Solution", "Reactor Curcible", 2, 1, ("Clean Water", 1), ("Yazhen Powder", 1));
+            AddRecipe("Liquid Xiranite", "Reactor Crucible", 2, 1, ("Clean Water", 1), ("Xiranite", 1));
             AddRecipe("Carbon", "Refining Unit", 2, 1, ("Buckflower", 1));
             AddRecipe("Carbon", "Refining Unit", 2, 1, ("Sandleaf", 1));
             AddRecipe("Origocrust", "Refining Unit", 2, 1, ("Originium Ore", 1));
@@ -183,6 +187,11 @@ namespace EndfieldModeler
             AddRecipe("LC Valley Battery", "Packaging Unit", 10, 1, ("Originium Powder", 10), ("Amethyst Part", 5));
             AddRecipe("SC Valley Battery", "Packaging Unit", 10, 1, ("Originium Powder", 15), ("Ferrium Part", 10));
             AddRecipe("HC Valley Battery", "Packaging Unit", 10, 1, ("Steel Part", 10), ("Dense Originium Powder", 15));
+            AddRecipe("LC Wuling Battery", "Packaging Unit", 10, 1, ("Dense Originium Powder", 15), ("Xiranite", 5));
+            AddRecipe("Ferrium Bottle (Clean Water)", "Filling Unit", 2, 1, ("Clean Water", 1), ("Ferrium Bottle", 1));
+            AddRecipe("Ferrium Bottle (Jincao)", "Filling Unit", 2, 1, ("Jincao Solution", 1), ("Ferrium Bottle", 1));
+            AddRecipe("Ferrium Bottle (Yazhen)", "Filling Unit", 2, 1, ("Yazhen Solution", 1), ("Ferrium Bottle", 1));
+            AddRecipe("Ferrium Bottle (Liquid Xiranite)", "Filling Unit", 2, 1, ("Liquid Xiranite", 1), ("Ferrium Bottle", 1));
 
             // Usable Items
             AddRecipe("Industrial Explosive", "Packaging Unit", 10, 1, ("Aketine Powder", 1), ("Amethyst Part", 5));
@@ -192,10 +201,14 @@ namespace EndfieldModeler
             AddRecipe("Yazhen Powder", "Shredding Unit", 2, 2, ("Yazhen", 1));
                 // Firebuckle Powder        (Not automatable)
                 // Citromix                 (Not automatable)
+                // Fluffed Jincao Powder    (Not automatable)
+                // Thorny Yazhen Powder     (Not automatable)
             AddRecipe("Buck Capsule [C]", "Filling Unit", 10, 1, ("Buckflower Powder", 5), ("Amethyst Bottle", 5));
             AddRecipe("Buck Capsule [B]", "Filling Unit", 10, 1, ("Buckflower Powder", 10), ("Ferrium Bottle", 10));
             AddRecipe("Canned Citrome [C]", "Filling Unit", 10, 1, ("Citrome Powder", 5), ("Amethyst Bottle", 5));
             AddRecipe("Canned Citrome [B]", "Filling Unit", 10, 1, ("Citrome Powder", 10), ("Ferrium Bottle", 10));
+            AddRecipe("Jincao Drink", "Packaging Unit", 10, 1, ("Ferrium Bottle (Jincao)", 5), ("Ferrium Part", 10));
+            AddRecipe("Yazhen Syringe [C]", "Packaging Unit", 10, 1, ("Ferrium Bottle (Yazhen)", 5), ("Ferrium Part", 10));
             AddRecipe("Buck Capsule [A]", "Filling Unit", 10, 1, ("Steel Bottle", 10), ("Ground Buckflower Powder", 10));
             AddRecipe("Canned Citrome [A]", "Filling Unit", 10, 1, ("Ground Citrome Powder", 10), ("Steel Bottle", 10));
                 // Buckpill [S]             (Not automatable)
@@ -462,6 +475,8 @@ namespace EndfieldModeler
                 .Replace(" ", "_")
                 .Replace("[", "")
                 .Replace("]", "")
+                .Replace("(", "")
+                .Replace(")", "")
                 .ToLower() + ".png";
 
             string baseDir = AppDomain.CurrentDomain.BaseDirectory;
