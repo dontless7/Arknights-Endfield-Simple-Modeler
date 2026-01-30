@@ -12,7 +12,7 @@ Designed to help visualize large and complex production setups.
 1. **Unzip** the downloaded release ZIP **`aesm-v%VERSION%.zip`**.  
 2. Start the program by running **`EndfieldModeler.exe`**.   
 3. Use the **controls in the top-right corner** of the app.
-====================================================================================================
+======================================================================
 4. To create a new production line, press the **“Create new Production Line”** button at the top.  
 5. Nodes are **moveable** and display:  
    - Produced item
@@ -23,7 +23,7 @@ Designed to help visualize large and complex production setups.
 7. On the production line **END node**, use **+ / -** to increase/decrease the output amount.  
 8. For ores, the **total demand per minute** is displayed.  
 9. On the **END node**, the **total power consumption** of the production line is shown *(excluding mining rigs)*.  
-====================================================================================================
+======================================================================
 10. **Undo/Redo node movement:**  
     - `Ctrl + Z` → Undo
     - `Ctrl + Y` → Redo 
