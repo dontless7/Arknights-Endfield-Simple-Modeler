@@ -41,7 +41,7 @@ namespace EndfieldModeler
             DoubleBuffered = true;
             Size = new Size(1400, 900);
             BackColor = Color.FromArgb(20, 20, 25);
-            Text = "Arknights:Endfield Simple Modeler (AESM) v1.4.1-alpha";
+            Text = "Arknights:Endfield Simple Modeler (AESM) v1.4.2-alpha";
             KeyPreview = true;
 
             InitializeRecipes();
@@ -131,9 +131,9 @@ namespace EndfieldModeler
             AddRecipe("Citrome Seed", "Seed-Picking Unit", 2, 2, ("Citrome", 1));
             AddRecipe("Aketine", "Planting Unit", 2, 1, ("Aketine Seed", 1));
             AddRecipe("Aketine Seed", "Seed-Picking Unit", 2, 2, ("Aketine", 1));
-                // Jincao (not automatable)
+            AddRecipe("Jincao", "Planting Unit", 2, 2, ("Jincao Seed", 1), ("Clean Water", 1));
             AddRecipe("Jincao Seed", "Seed-Picking Unit", 2, 2, ("Jincao", 1));
-                // Yazhen (not automatable)
+            AddRecipe("Yazhen", "Planting Unit", 2, 2, ("Yazhen Seed", 1), ("Clean Water", 1));
             AddRecipe("Yazhen Seed", "Seed-Picking Unit", 2, 2, ("Yazhen", 1));
             AddRecipe("Clean Water", "Fluid Pump", 1, 1, ("", 0));
             AddRecipe("Reed Rye Seed", "Seed-Picking Unit", 2, 2, ("Reed Rye", 1));
